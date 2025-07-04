@@ -22,7 +22,7 @@ async function loadMap(){
     for (let row=0; row < map.height; row++) {
         const tilesRow = [];
         for (let col=0; col < map.width; col++) {
-            const tile = tiles[row * map.height + col];
+            const tile = tiles[row * map.width + col];
             tilesRow.push({id: tile.id, gid: tile.gid});
         }
         map2D.push(tilesRow);

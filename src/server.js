@@ -18,6 +18,34 @@ const io = new Server(httpServer, {
     }
 });
 
+const TICK_RATE = 30;
+const SPEED = 5;
+
+let players = [];
+const inputsMap = {};
+
+function tick(){
+    for(const player of players){
+        const inputs = inputsMap[player.id] ;
+        if(inputs.up){
+            player.y -= SPEED;
+        }
+        else if(inputs.down){
+            player.y += SPEED;
+        }
+
+        if(inputs.left){
+            player.x -= SPEED;
+        }
+        else if(inputs.right){
+            player.x += SPEED;
+        }
+    }
+
+    io.emit('players', players);
+    // console.log(players);
+}
+
 // wrapping in promise , converted callback to promise
 // to not use nested callbacks
 async function main(){
@@ -29,11 +57,33 @@ async function main(){
     io.on('connect', (socket) => {  // io sends msg to anyone in channel
         console.log('A user connected:', socket.id);
 
+        inputsMap[socket.id] = { // initialize with props
+            up: false,          // just when new user connects
+            down: false,
+            left: false,
+            right: false
+        }
+
+        players.push({
+            id: socket.id,
+            x: 0,
+            y: 0,
+            // angle: 0,
+            // speed: 0
+        });
+
         // send map data to the client
         socket.emit('map', map2D); // sends to independent client connceted at that time
 
+        socket.on('inputs', (inputs)=>{
+            inputsMap[socket.id] = inputs;
+        })
+
         socket.on('disconnect', () => {
             console.log('A user disconnected:', socket.id);
+            players = players.filter((player) => player.id !== socket.id);
+            // jo gya wo gya.. can use splice here instead of filter for perf.
+            
         });
     });
 
@@ -42,6 +92,8 @@ async function main(){
     httpServer.listen(5050, () => {
         console.log('Server is running on port 5050');
     });
+
+    setInterval(tick, 1000/TICK_RATE);
 }
 
 main();
