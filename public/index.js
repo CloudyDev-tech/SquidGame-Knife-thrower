@@ -1,15 +1,32 @@
+const characterSelect = document.getElementById('character-select');
 const loadingScreen = document.getElementById('loading-screen');
 const startButton = document.getElementById('start-button');
 const canvasElement = document.getElementById('canvas');
 
 const mapImage = new Image();
-mapImage.src = './snowy-sheet.png'
+mapImage.src = './snowy-sheet.png';
 
-const santaImage = new Image();
-santaImage.src = './santa.png';
-// santaImage.src = './thanos50.png';
+let playerImage = new Image();
+playerImage.src = './santa.png'; // Default
 
 const walkSnowSound = new Audio('./walk-snow.mp3');
+
+// Handle character selection
+document.querySelectorAll('.character-card').forEach(card => {
+    card.addEventListener('click', () => {
+        const character = card.dataset.character;
+        // Special case for thanos (uses thanos50.png)
+        if (character === 'thanos') {
+            playerImage.src = './thanos50.png';
+        } 
+        // All other characters use their name directly
+        else {
+            playerImage.src = `./${character}.png`;
+        }
+        characterSelect.style.display = 'none';
+        loadingScreen.style.display = 'flex';
+    });
+});
 
 // Initialize canvas but keep it hidden until game starts
 canvasElement.width = window.innerWidth;
@@ -173,7 +190,7 @@ function loop(){
 
 
     for(const player of players){
-        canvas.drawImage(santaImage, player.x - cameraX, player.y - cameraY);
+        canvas.drawImage(playerImage, player.x - cameraX, player.y - cameraY);
     }
 
     // Load knife image
