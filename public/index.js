@@ -13,13 +13,17 @@ const canvas = canvasElement.getContext('2d'); // to render out stuff
 
 let map=[[]];
 let players = [];
+let snowballs = [];
 
 const TILE_SIZE = 32;
+
+let myId = null; // to keep track of my id
 
 const socket = io('ws://localhost:5050');
 
 socket.on('connect', () => {
     console.log('connected');
+    console.log(socket.id);
 });
 
 socket.on('disconnect', () => {
@@ -33,6 +37,10 @@ socket.on('map', (loadedMap) => {
 
 socket.on('players', (serverPlayers)=>{
     players = serverPlayers;
+})
+
+socket.on('snowballs', (serverSnowballs)=>{
+    snowballs = serverSnowballs;
 })
 
 const inputs = {
@@ -77,8 +85,24 @@ window.addEventListener('keyup', (e)=>{
     socket.emit('inputs', inputs);
 })
 
+
+window.addEventListener('click', (e)=>{
+    const angle = Math.atan2(e.clientY - canvasElement.height/2, e.clientX - canvasElement.width/2);
+    socket.emit("snowball", angle);
+});
+
 function loop(){
-    canvas.clearRect(0,0,canvas.width, canvas.height);
+    canvas.clearRect(0,0,canvasElement.width, canvasElement.height);
+
+
+    const myPlayer = players.find(player => player.id === socket.id);
+    let cameraX = 0, cameraY = 0;
+    if(myPlayer){
+        myId = myPlayer.id;
+        cameraX = parseInt(myPlayer.x - canvasElement.width/2);
+        cameraY = parseInt(myPlayer.y - canvasElement.height/2);
+    }
+    
 
     const TILES_IN_ROW = 8;
 
@@ -94,16 +118,24 @@ function loop(){
                 imageRow * TILE_SIZE,
                 TILE_SIZE,
                 TILE_SIZE,
-                 col * TILE_SIZE, // where canvas should draw this image
-                row * TILE_SIZE,
+                 col * TILE_SIZE - cameraX, // where canvas should draw this image
+                row * TILE_SIZE - cameraY,
                 TILE_SIZE,
                 TILE_SIZE
             );}
     }
 
     for(const player of players){
-        canvas.drawImage(santaImage, player.x, player.y);
+        canvas.drawImage(santaImage, player.x - cameraX, player.y - cameraY);
     }
+
+    for(const snowball of snowballs){
+        canvas.fillStyle = '#ffffff'
+        canvas.beginPath();
+        canvas.arc(snowball.x - cameraX, snowball.y - cameraY, 3, 0, 2 * Math.PI);
+        canvas.fill();
+    }
+
     // canvas.drawImage(santaImage, 0, 0, 32, 32, 100, 100, 32, 32);
     // canvas.fillColor = "ffffff"
     // canvas.fillRect(0,0,10,10);

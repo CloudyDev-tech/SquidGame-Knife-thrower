@@ -20,11 +20,13 @@ const io = new Server(httpServer, {
 
 const TICK_RATE = 30;
 const SPEED = 5;
+const SNOWBALL_SPEED = 8;
 
 let players = [];
+let snowballs = [];
 const inputsMap = {};
 
-function tick(){
+function tick(delta){
     for(const player of players){
         const inputs = inputsMap[player.id] ;
         if(inputs.up){
@@ -43,6 +45,35 @@ function tick(){
     }
 
     io.emit('players', players);
+
+    for(const snowball of snowballs){
+        snowball.x += Math.cos(snowball.angle) * SNOWBALL_SPEED;
+        snowball.y += Math.sin(snowball.angle) * SNOWBALL_SPEED;
+        snowball.timeLeft -= delta;
+
+        for (const player of players){
+            // if(player.id !== snowball.id && Math.abs(player.x - snowball.x) < 10 && Math.abs(player.y - snowball.y) < 10){
+            //     snowballs = snowballs.filter((snowball) => snowball.id !== player.id);
+            //     players = players.filter((player) => player.id !== snowball.id);
+            // }
+
+            if(player.id === snowball.playerId)
+                continue;
+            const distance =  Math.sqrt((player.x + 8 - snowball.x) ** 2 + (player.y + 8 - snowball.y) ** 2);
+            // cause image 16x16 ki hai
+            if(distance <= 8){ // elimination hone par respawn
+                player.x = 0;
+                player.y = 0;
+                snowball.timeLeft = -1;
+                break;
+            }
+            
+           }
+    }
+
+    snowballs = snowballs.filter((snowball) => snowball.timeLeft > 0);
+
+    io.emit('snowballs', snowballs);
     // console.log(players);
 }
 
@@ -79,11 +110,23 @@ async function main(){
             inputsMap[socket.id] = inputs;
         })
 
+        socket.on('snowball', (angle)=>{
+            const player = players.find((player) => player.id === socket.id);
+            snowballs.push({
+                angle,
+                x: player.x,
+                y: player.y,
+                timeLeft: 1000,
+                playerId: socket.id
+            })
+            // console.log('snowball thrown', angle);
+        })
+
         socket.on('disconnect', () => {
             console.log('A user disconnected:', socket.id);
             players = players.filter((player) => player.id !== socket.id);
             // jo gya wo gya.. can use splice here instead of filter for perf.
-            
+
         });
     });
 
@@ -93,7 +136,13 @@ async function main(){
         console.log('Server is running on port 5050');
     });
 
-    setInterval(tick, 1000/TICK_RATE);
+    let lastUpdate = Date.now();
+    setInterval(()=>{
+        const now = Date.now();
+        const delta = now - lastUpdate;
+        tick(delta);
+        lastUpdate = now;
+        }, 1000/TICK_RATE);
 }
 
 main();
