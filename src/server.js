@@ -74,22 +74,24 @@ function tick(delta){
         const previousY = player.y;
         const inputs = inputsMap[player.id];
         
+        // Handle vertical movement with boundary checks
         if(inputs.up){
-            player.y -= SPEED;
+            player.y = Math.max(0, player.y - SPEED);
         }
         else if(inputs.down){
-            player.y += SPEED;
+            player.y = Math.min(ground2D.length * 32 - 32, player.y + SPEED);
         }
 
         if(isCollidingWithObstacles(player)){
             player.y = previousY;
         }
 
+        // Handle horizontal movement with boundary checks
         if(inputs.left){
-            player.x -= SPEED;
+            player.x = Math.max(0, player.x - SPEED);
         }
         else if(inputs.right){
-            player.x += SPEED;
+            player.x = Math.min(ground2D[0].length * 32 - 32, player.x + SPEED);
         }
 
         if(isCollidingWithObstacles(player)){

@@ -1,3 +1,7 @@
+const loadingScreen = document.getElementById('loading-screen');
+const startButton = document.getElementById('start-button');
+const canvasElement = document.getElementById('canvas');
+
 const mapImage = new Image();
 mapImage.src = './snowy-sheet.png'
 
@@ -6,12 +10,16 @@ santaImage.src = './santa.png';
 
 const walkSnowSound = new Audio('./walk-snow.mp3');
 
-const canvasElement = document.getElementById('canvas');
-// console.log(canvasElement);
+// Initialize canvas but keep it hidden until game starts
 canvasElement.width = window.innerWidth;
 canvasElement.height = window.innerHeight;
+const canvas = canvasElement.getContext('2d');
 
-const canvas = canvasElement.getContext('2d'); // to render out stuff
+// Handle start button click
+startButton.addEventListener('click', () => {
+    loadingScreen.style.display = 'none';
+    canvasElement.style.display = 'block';
+});
 
 let groundMap=[[]];
 let decalMap = [[]];
