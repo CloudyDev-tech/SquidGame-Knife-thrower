@@ -26,9 +26,54 @@ let players = [];
 let snowballs = [];
 const inputsMap = {};
 
+let ground2D, decals2D;
+
+function isColliding(rect1, rect2){
+    return ( rect1.x < rect2.x + rect2.width &&
+        rect1.x + rect1.width > rect2.x &&
+        rect1.y < rect2.y + rect2.height &&
+        rect1.y + rect1.height > rect2.y 
+    ) ;
+    // console.log(rect1.x < rect2.x + rect2.width &&
+    //     rect1.x + rect1.width > rect2.x &&
+    //     rect1.y < rect2.y + rect2.height &&
+    //     rect1.y + rect1.height > rect2.y )
+}
+
+function isCollidingWithObstacles(player){
+    for(let row=0; row<decals2D.length; row++){
+        for(let col=0; col<decals2D[0].length; col++){
+            const tile = decals2D[row][col];
+            // Only check collision if tile exists (not undefined)
+            if(tile && isColliding(
+                {
+                    x: player.x,
+                    y: player.y,
+                    width: 32,
+                    height: 32
+                },
+                {
+                    x: col * 32,
+                    y: row * 32,
+                    width: 32,
+                    height: 32
+                }
+            )){
+                console.log(`Colliding with obstacle at row ${row}, col ${col}`);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+
 function tick(delta){
     for(const player of players){
-        const inputs = inputsMap[player.id] ;
+        const previousX = player.x;
+        const previousY = player.y;
+        const inputs = inputsMap[player.id];
+        
         if(inputs.up){
             player.y -= SPEED;
         }
@@ -36,11 +81,19 @@ function tick(delta){
             player.y += SPEED;
         }
 
+        if(isCollidingWithObstacles(player)){
+            player.y = previousY;
+        }
+
         if(inputs.left){
             player.x -= SPEED;
         }
         else if(inputs.right){
             player.x += SPEED;
+        }
+
+        if(isCollidingWithObstacles(player)){
+            player.x = previousX;
         }
     }
 
@@ -81,7 +134,7 @@ function tick(delta){
 // to not use nested callbacks
 async function main(){
 
-    const {ground2D, decals2D} = await loadMap();
+    ({ground2D, decals2D} = await loadMap())
     // console.log(map2D);
 
     // socket io connection
