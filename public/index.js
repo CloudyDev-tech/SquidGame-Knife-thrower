@@ -48,7 +48,7 @@ const TILE_SIZE = 32;
 
 let myId = null; // to keep track of my id
 
-const socket = io('ws://localhost:5050');
+const socket = io();
 
 socket.on('connect', () => {
     console.log('connected');
