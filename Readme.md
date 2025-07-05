@@ -3,7 +3,7 @@
 A multiplayer knife throwing game inspired by Squid Game.
 
 ## LIVE
-[text](https://squidgame-knife-thrower-production.up.railway.app/)
+[Demo](https://squidgame-knife-thrower-production.up.railway.app/)
 
 ## Features
 - Multiplayer gameplay
