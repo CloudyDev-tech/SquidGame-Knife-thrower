@@ -41,8 +41,30 @@ startButton.addEventListener('click', () => {
 
 let groundMap=[[]];
 let decalMap = [[]];
+// Object pools for better memory management
+const playerPool = [];
+const knifePool = [];
 let players = [];
 let knives = [];
+const playerMap = new Map(); 
+const knifeImg = new Image(); // Load once instead of every frame
+knifeImg.src = 'knife54.png';
+
+function getPlayerFromPool() {
+    return playerPool.pop() || {};
+}
+
+function getKnifeFromPool() {
+    return knifePool.pop() || {};
+}
+
+function returnPlayerToPool(player) {
+    playerPool.push(player);
+}
+
+function returnKnifeToPool(knife) {
+    knifePool.push(knife);
+}
 
 const TILE_SIZE = 32;
 
@@ -67,11 +89,35 @@ socket.on('map', (loadedMap) => {
 })
 
 socket.on('players', (serverPlayers)=>{
-    players = serverPlayers;
+    // Return old players to pool
+    for(let i=0; i<players.length; i++) {
+        returnPlayerToPool(players[i]);
+    }
+    
+    // Get new players from pool
+    players = [];
+    playerMap.clear();
+    for(let i=0; i<serverPlayers.length; i++) {
+        const player = getPlayerFromPool();
+        Object.assign(player, serverPlayers[i]);
+        players.push(player);
+        playerMap.set(player.id, player);
+    }
 })
 
 socket.on('knives', (serverKnives)=>{
-    knives = serverKnives;
+    // Return old knives to pool
+    for(let i=0; i<knives.length; i++) {
+        returnKnifeToPool(knives[i]);
+    }
+    
+    // Get new knives from pool
+    knives = [];
+    for(let i=0; i<serverKnives.length; i++) {
+        const knife = getKnifeFromPool();
+        Object.assign(knife, serverKnives[i]);
+        knives.push(knife);
+    }
 })
 
 const inputs = {
@@ -134,7 +180,7 @@ function loop(){
     canvas.clearRect(0,0,canvasElement.width, canvasElement.height);
 
 
-    const myPlayer = players.find(player => player.id === socket.id);
+    const myPlayer = playerMap.get(socket.id);
     let cameraX = 0, cameraY = 0;
     if(myPlayer){
         myId = myPlayer.id;
@@ -145,9 +191,11 @@ function loop(){
 
     const TILES_IN_ROW = 8;
 
-    for(let row=0; row<groundMap.length; row++){
-        for(let col=0; col<groundMap[0].length; col++){
-            let {id} = groundMap[row][col];
+    const rows = groundMap.length;
+    const cols = groundMap[0].length;
+    for(let row=0; row<rows; row++){
+        for(let col=0; col<cols; col++){
+            const {id} = groundMap[row][col];
             const imageRow = parseInt(id/TILES_IN_ROW);
             const imageCol = id % TILES_IN_ROW;
             // const imageY = id/TILES_IN_ROW;
@@ -168,9 +216,12 @@ function loop(){
 
     // 2nd layer for loop
 
-    for(let row=0; row<decalMap.length; row++){
-        for(let col=0; col<decalMap[0].length; col++){
-            let {id} = decalMap[row][col] ?? {id: undefined};
+    // Optimized nested loops with cached lengths
+    const decalRows = decalMap.length;
+    const decalCols = decalMap[0].length;
+    for(let row=0; row<decalRows; row++){
+        for(let col=0; col<decalCols; col++){
+            const {id} = decalMap[row][col] ?? {id: undefined};
             const imageRow = parseInt(id/TILES_IN_ROW);
             const imageCol = id % TILES_IN_ROW;
             // const imageY = id/TILES_IN_ROW;
@@ -189,15 +240,13 @@ function loop(){
     }
 
 
-    for(const player of players){
+    for(let i=0, len=players.length; i<len; i++){
+        const player = players[i];
         canvas.drawImage(playerImage, player.x - cameraX, player.y - cameraY);
     }
 
-    // Load knife image
-    const knifeImg = new Image();
-    knifeImg.src = 'knife54.png';
-
-    for(const knife of knives){
+    for(let i=0, len=knives.length; i<len; i++){
+        const knife = knives[i];
         if(knifeImg.complete) {
             // Save current canvas state
             canvas.save();
@@ -215,7 +264,10 @@ function loop(){
     // canvas.drawImage(santaImage, 0, 0, 32, 32, 100, 100, 32, 32);
     // canvas.fillColor = "ffffff"
     // canvas.fillRect(0,0,10,10);
-    window.requestAnimationFrame(loop);
+    // Limit to ~60 FPS
+    setTimeout(() => {
+        window.requestAnimationFrame(loop);
+    }, 16);
 }
 
 window.requestAnimationFrame(loop);
