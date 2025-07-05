@@ -7,6 +7,7 @@ mapImage.src = './snowy-sheet.png'
 
 const santaImage = new Image();
 santaImage.src = './santa.png';
+// santaImage.src = './thanos50.png';
 
 const walkSnowSound = new Audio('./walk-snow.mp3');
 
@@ -24,7 +25,7 @@ startButton.addEventListener('click', () => {
 let groundMap=[[]];
 let decalMap = [[]];
 let players = [];
-let snowballs = [];
+let knives = [];
 
 const TILE_SIZE = 32;
 
@@ -52,8 +53,8 @@ socket.on('players', (serverPlayers)=>{
     players = serverPlayers;
 })
 
-socket.on('snowballs', (serverSnowballs)=>{
-    snowballs = serverSnowballs;
+socket.on('knives', (serverKnives)=>{
+    knives = serverKnives;
 })
 
 const inputs = {
@@ -109,7 +110,7 @@ window.addEventListener('keyup', (e)=>{
 
 window.addEventListener('click', (e)=>{
     const angle = Math.atan2(e.clientY - canvasElement.height/2, e.clientX - canvasElement.width/2);
-    socket.emit("snowball", angle);
+    socket.emit("knife", angle);
 });
 
 function loop(){
@@ -175,11 +176,23 @@ function loop(){
         canvas.drawImage(santaImage, player.x - cameraX, player.y - cameraY);
     }
 
-    for(const snowball of snowballs){
-        canvas.fillStyle = '#ffffff'
-        canvas.beginPath();
-        canvas.arc(snowball.x - cameraX, snowball.y - cameraY, 6, 0, 2 * Math.PI);
-        canvas.fill();
+    // Load knife image
+    const knifeImg = new Image();
+    knifeImg.src = 'knife54.png';
+
+    for(const knife of knives){
+        if(knifeImg.complete) {
+            // Save current canvas state
+            canvas.save();
+            // Move to knife position
+            canvas.translate(knife.x - cameraX, knife.y - cameraY);
+            // Rotate based on angle
+            canvas.rotate(knife.angle);
+            // Draw knife centered
+            canvas.drawImage(knifeImg, -8, -8, 32, 32);
+            // Restore canvas state
+            canvas.restore();
+        }
     }
 
     // canvas.drawImage(santaImage, 0, 0, 32, 32, 100, 100, 32, 32);

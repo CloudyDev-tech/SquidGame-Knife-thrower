@@ -23,7 +23,7 @@ const SPEED = 5;
 const SNOWBALL_SPEED = 12;
 
 let players = [];
-let snowballs = [];
+let knives = [];
 const inputsMap = {};
 
 let ground2D, decals2D;
@@ -101,10 +101,10 @@ function tick(delta){
 
     io.emit('players', players);
 
-    for(const snowball of snowballs){
-        snowball.x += Math.cos(snowball.angle) * SNOWBALL_SPEED;
-        snowball.y += Math.sin(snowball.angle) * SNOWBALL_SPEED;
-        snowball.timeLeft -= delta;
+    for(const knife of knives){
+        knife.x += Math.cos(knife.angle) * SNOWBALL_SPEED;
+        knife.y += Math.sin(knife.angle) * SNOWBALL_SPEED;
+        knife.timeLeft -= delta;
 
         for (const player of players){
             // if(player.id !== snowball.id && Math.abs(player.x - snowball.x) < 10 && Math.abs(player.y - snowball.y) < 10){
@@ -112,23 +112,23 @@ function tick(delta){
             //     players = players.filter((player) => player.id !== snowball.id);
             // }
 
-            if(player.id === snowball.playerId)
+            if(player.id === knife.playerId)
                 continue;
-            const distance =  Math.sqrt((player.x + 16 - snowball.x) ** 2 + (player.y + 16 - snowball.y) ** 2);
+            const distance =  Math.sqrt((player.x + 16 - knife.x) ** 2 + (player.y + 16 - knife.y) ** 2);
             // cause image 16x16 ki hai
             if(distance <= 16){ // elimination hone par respawn
                 player.x = 200;
                 player.y = 600;
-                snowball.timeLeft = -1;
+                knife.timeLeft = -1;
                 break;
             }
             
            }
     }
 
-    snowballs = snowballs.filter((snowball) => snowball.timeLeft > 0);
+    knives = knives.filter((knife) => knife.timeLeft > 0);
 
-    io.emit('snowballs', snowballs);
+    io.emit('knives', knives);
     // console.log(players);
 }
 
@@ -167,9 +167,9 @@ async function main(){
             inputsMap[socket.id] = inputs;
         })
 
-        socket.on('snowball', (angle)=>{
+        socket.on('knife', (angle)=>{
             const player = players.find((player) => player.id === socket.id);
-            snowballs.push({
+            knives.push({
                 angle,
                 x: player.x,
                 y: player.y,
