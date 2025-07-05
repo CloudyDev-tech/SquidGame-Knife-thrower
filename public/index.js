@@ -11,7 +11,8 @@ canvasElement.height = window.innerHeight;
 
 const canvas = canvasElement.getContext('2d'); // to render out stuff
 
-let map=[[]];
+let groundMap=[[]];
+let decalMap = [[]];
 let players = [];
 let snowballs = [];
 
@@ -32,7 +33,9 @@ socket.on('disconnect', () => {
 
 socket.on('map', (loadedMap) => {
     // console.log('map', loadedMap);
-    map = loadedMap;
+    groundMap = loadedMap.ground;
+    decalMap = loadedMap.decals;
+    // map = loadedMap;
 })
 
 socket.on('players', (serverPlayers)=>{
@@ -106,9 +109,9 @@ function loop(){
 
     const TILES_IN_ROW = 8;
 
-    for(let row=0; row<map.length; row++){
-        for(let col=0; col<map[0].length; col++){
-            const {id} = map[row][col];
+    for(let row=0; row<groundMap.length; row++){
+        for(let col=0; col<groundMap[0].length; col++){
+            let {id} = groundMap[row][col];
             const imageRow = parseInt(id/TILES_IN_ROW);
             const imageCol = id % TILES_IN_ROW;
             // const imageY = id/TILES_IN_ROW;
@@ -122,8 +125,33 @@ function loop(){
                 row * TILE_SIZE - cameraY,
                 TILE_SIZE,
                 TILE_SIZE
-            );}
+            );
+        }
     }
+
+
+    // 2nd layer for loop
+
+    for(let row=0; row<decalMap.length; row++){
+        for(let col=0; col<decalMap[0].length; col++){
+            let {id} = decalMap[row][col] ?? {id: undefined};
+            const imageRow = parseInt(id/TILES_IN_ROW);
+            const imageCol = id % TILES_IN_ROW;
+            // const imageY = id/TILES_IN_ROW;
+
+            canvas.drawImage(mapImage,
+                imageCol * TILE_SIZE,
+                imageRow * TILE_SIZE,
+                TILE_SIZE,
+                TILE_SIZE,
+                 col * TILE_SIZE - cameraX, // where canvas should draw this image
+                row * TILE_SIZE - cameraY,
+                TILE_SIZE,
+                TILE_SIZE
+            );
+        }
+    }
+
 
     for(const player of players){
         canvas.drawImage(santaImage, player.x - cameraX, player.y - cameraY);
@@ -132,7 +160,7 @@ function loop(){
     for(const snowball of snowballs){
         canvas.fillStyle = '#ffffff'
         canvas.beginPath();
-        canvas.arc(snowball.x - cameraX, snowball.y - cameraY, 3, 0, 2 * Math.PI);
+        canvas.arc(snowball.x - cameraX, snowball.y - cameraY, 6, 0, 2 * Math.PI);
         canvas.fill();
     }
 

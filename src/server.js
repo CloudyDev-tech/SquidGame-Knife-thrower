@@ -20,7 +20,7 @@ const io = new Server(httpServer, {
 
 const TICK_RATE = 30;
 const SPEED = 5;
-const SNOWBALL_SPEED = 8;
+const SNOWBALL_SPEED = 12;
 
 let players = [];
 let snowballs = [];
@@ -59,11 +59,11 @@ function tick(delta){
 
             if(player.id === snowball.playerId)
                 continue;
-            const distance =  Math.sqrt((player.x + 8 - snowball.x) ** 2 + (player.y + 8 - snowball.y) ** 2);
+            const distance =  Math.sqrt((player.x + 16 - snowball.x) ** 2 + (player.y + 16 - snowball.y) ** 2);
             // cause image 16x16 ki hai
-            if(distance <= 8){ // elimination hone par respawn
-                player.x = 0;
-                player.y = 0;
+            if(distance <= 16){ // elimination hone par respawn
+                player.x = 200;
+                player.y = 600;
                 snowball.timeLeft = -1;
                 break;
             }
@@ -81,7 +81,7 @@ function tick(delta){
 // to not use nested callbacks
 async function main(){
 
-    const map2D = await loadMap();
+    const {ground2D, decals2D} = await loadMap();
     // console.log(map2D);
 
     // socket io connection
@@ -97,14 +97,16 @@ async function main(){
 
         players.push({
             id: socket.id,
-            x: 0,
-            y: 0,
+            x: 400,
+            y: 850,
             // angle: 0,
             // speed: 0
         });
 
         // send map data to the client
-        socket.emit('map', map2D); // sends to independent client connceted at that time
+        socket.emit('map',{ground: ground2D,
+            decals: decals2D
+        }); // sends to independent client connceted at that time
 
         socket.on('inputs', (inputs)=>{
             inputsMap[socket.id] = inputs;

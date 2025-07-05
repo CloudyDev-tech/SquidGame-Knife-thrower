@@ -16,19 +16,34 @@ async function loadMap(){
 
 
     const layer = map.layers[0];
-    const tiles = layer.tiles;
-    const map2D = [];
+    const groundTiles = layer.tiles;
+    const decalTiles = map.layers[1].tiles;
+    const ground2D = [];
+    const decals2D = [];
     
     for (let row=0; row < map.height; row++) {
         const tilesRow = [];
+        const decalRow = [];
         for (let col=0; col < map.width; col++) {
-            const tile = tiles[row * map.width + col];
+            const tile = groundTiles[row * map.width + col];
             tilesRow.push({id: tile.id, gid: tile.gid});
+
+            // 2nd layer (decals)
+            const decalTile = decalTiles[row * map.width + col];
+
+            if(decalTile){
+            decalRow.push({id: decalTile.id, gid: decalTile.gid});
+            }
+            else{
+                decalRow.push(undefined);
+            }
+
         }
-        map2D.push(tilesRow);
+        ground2D.push(tilesRow);
+        decals2D.push(decalRow);
     }
     // console.log('Map 2D array created:', map2D);
-    return map2D;
+    return {ground2D, decals2D};
 }
 
 
