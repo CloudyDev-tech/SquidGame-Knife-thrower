@@ -4,6 +4,8 @@ mapImage.src = './snowy-sheet.png'
 const santaImage = new Image();
 santaImage.src = './santa.png';
 
+const walkSnowSound = new Audio('./walk-snow.mp3');
+
 const canvasElement = document.getElementById('canvas');
 // console.log(canvasElement);
 canvasElement.width = window.innerWidth;
@@ -67,6 +69,9 @@ window.addEventListener('keydown', (e)=>{
     else if (e.key === 'ArrowRight' || e.key === 'd'){
         inputs.right = true;
     }
+    if (['a', 's', 'w', 'd', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowUp'].includes(e.key)){
+        walkSnowSound.play();
+    }
     // console.log(inputs);
     socket.emit('inputs', inputs);
 });
@@ -83,6 +88,11 @@ window.addEventListener('keyup', (e)=>{
     }
     else if (e.key === 'ArrowRight' || e.key === 'd'){
         inputs.right = false;
+    }
+
+    if (['a', 's', 'w', 'd', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowUp'].includes(e.key)){
+        walkSnowSound.pause();
+        walkSnowSound.currentTime = 0;
     }
     // console.log(inputs);
     socket.emit('inputs', inputs);
