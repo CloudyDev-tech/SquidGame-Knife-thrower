@@ -19,8 +19,17 @@ const io = new Server(httpServer, {
 });
 
 const TICK_RATE = 30;
-const SPEED = 5;
-const SNOWBALL_SPEED = 12;
+
+// Character speed configurations
+const CHARACTER_SPEEDS = {
+    '120': { speed: 10, snowballSpeed: 20 },
+    'santa': { speed: 5, snowballSpeed: 10 },
+    '100': { speed: 5, snowballSpeed: 10 },
+    '222': { speed: 4, snowballSpeed: 7 },
+    'recruiter': { speed: 10, snowballSpeed: 18 },
+    'choi-woo': { speed: 7, snowballSpeed: 15 },
+    'thanos': { speed: 7, snowballSpeed: 17 }
+};
 
 let players = [];
 let knives = [];
@@ -75,11 +84,13 @@ function tick(delta){
         const inputs = inputsMap[player.id];
         
         // Handle vertical movement with boundary checks
+        const charSpeed = CHARACTER_SPEEDS[player.character] || CHARACTER_SPEEDS['santa'];
+        
         if(inputs.up){
-            player.y = Math.max(0, player.y - SPEED);
+            player.y = Math.max(0, player.y - charSpeed.speed);
         }
         else if(inputs.down){
-            player.y = Math.min(ground2D.length * 32 - 32, player.y + SPEED);
+            player.y = Math.min(ground2D.length * 32 - 32, player.y + charSpeed.speed);
         }
 
         if(isCollidingWithObstacles(player)){
@@ -88,10 +99,10 @@ function tick(delta){
 
         // Handle horizontal movement with boundary checks
         if(inputs.left){
-            player.x = Math.max(0, player.x - SPEED);
+            player.x = Math.max(0, player.x - charSpeed.speed);
         }
         else if(inputs.right){
-            player.x = Math.min(ground2D[0].length * 32 - 32, player.x + SPEED);
+            player.x = Math.min(ground2D[0].length * 32 - 32, player.x + charSpeed.speed);
         }
 
         if(isCollidingWithObstacles(player)){
@@ -102,8 +113,10 @@ function tick(delta){
     io.emit('players', players);
 
     for(const knife of knives){
-        knife.x += Math.cos(knife.angle) * SNOWBALL_SPEED;
-        knife.y += Math.sin(knife.angle) * SNOWBALL_SPEED;
+        const player = players.find(p => p.id === knife.playerId);
+        const charSpeed = player ? CHARACTER_SPEEDS[player.character] || CHARACTER_SPEEDS['santa'] : CHARACTER_SPEEDS['santa'];
+        knife.x += Math.cos(knife.angle) * charSpeed.snowballSpeed;
+        knife.y += Math.sin(knife.angle) * charSpeed.snowballSpeed;
         knife.timeLeft -= delta;
 
         for (const player of players){
@@ -121,7 +134,7 @@ function tick(delta){
                 if(player.health <= 0) { // respawn only when health depleted
                     player.x = 200;
                     player.y = 600;
-                    player.health = 100; // reset health on respawn
+                    player.health = 100; // reset health to 100 on respawn
                 }
                 knife.timeLeft = -1;
                 break;
@@ -158,9 +171,8 @@ async function main(){
             id: socket.id,
             x: 400,
             y: 850,
-            health: 100
-            // angle: 0,
-            // speed: 0
+            health: 100, // Starting health set to 100
+            character: 'santa' // Default character
         });
 
         // send map data to the client
@@ -183,6 +195,13 @@ async function main(){
             })
             // console.log('snowball thrown', angle);
         })
+
+        socket.on('character', (character) => {
+            const player = players.find((player) => player.id === socket.id);
+            if (player) {
+                player.character = character;
+            }
+        });
 
         socket.on('disconnect', () => {
             console.log('A user disconnected:', socket.id);

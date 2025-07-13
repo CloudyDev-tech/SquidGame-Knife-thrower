@@ -13,19 +13,22 @@ const walkSnowSound = new Audio('./walk-snow.mp3');
 
 // Handle character selection
 document.querySelectorAll('.character-card').forEach(card => {
-    card.addEventListener('click', () => {
-        const character = card.dataset.character;
-        // Special case for thanos (uses thanos50.png)
-        if (character === 'thanos') {
-            playerImage.src = './thanos50.png';
-        } 
-        // All other characters use their name directly
-        else {
-            playerImage.src = `./${character}.png`;
-        }
-        characterSelect.style.display = 'none';
-        loadingScreen.style.display = 'flex';
-    });
+        card.addEventListener('click', () => {
+            const character = card.dataset.character;
+            // Special case for thanos (uses thanos50.png)
+            if (character === 'thanos') {
+                playerImage.src = './thanos50.png';
+            } 
+            // All other characters use their name directly
+            else {
+                playerImage.src = `./${character}.png`;
+            }
+            characterSelect.style.display = 'none';
+            loadingScreen.style.display = 'flex';
+            
+            // Tell server which character was selected
+            socket.emit('character', character);
+        });
 });
 
 // Initialize canvas but keep it hidden until game starts
