@@ -50,6 +50,25 @@ const knifePool = [];
 let players = [];
 let knives = [];
 const playerMap = new Map(); 
+// Preload all character images
+const characterImages = {};
+const characterFiles = {
+    '120': '120.png',
+    'santa': 'santa.png', 
+    '100': '100.png',
+    '222': '222.png',
+    'recruiter': 'recruiter.png',
+    'choi-woo': 'choi-woo.png',
+    'thanos': 'thanos50.png'
+};
+
+// Load all character images upfront -- this avoids loading them every frame
+// as images were flickering when loaded on the instant time
+Object.entries(characterFiles).forEach(([character, file]) => {
+    characterImages[character] = new Image();
+    characterImages[character].src = `./${file}`;
+});
+
 const knifeImg = new Image(); // Load once instead of every frame
 knifeImg.src = 'knife54.png';
 
@@ -245,7 +264,10 @@ function loop(){
 
     for(let i=0, len=players.length; i<len; i++){
         const player = players[i];
-        canvas.drawImage(playerImage, player.x - cameraX, player.y - cameraY);
+        const charImg = characterImages[player.character];
+        if (charImg && charImg.complete) {
+            canvas.drawImage(charImg, player.x - cameraX, player.y - cameraY);
+        }
         
         // Draw health bar with border
         const healthWidth = 32 * (player.health / 100);
