@@ -116,9 +116,13 @@ function tick(delta){
                 continue;
             const distance =  Math.sqrt((player.x + 16 - knife.x) ** 2 + (player.y + 16 - knife.y) ** 2);
             // cause image 16x16 ki hai
-            if(distance <= 16){ // elimination hone par respawn
-                player.x = 200;
-                player.y = 600;
+            if(distance <= 16){ // knife hit
+                player.health -= 20;
+                if(player.health <= 0) { // respawn only when health depleted
+                    player.x = 200;
+                    player.y = 600;
+                    player.health = 100; // reset health on respawn
+                }
                 knife.timeLeft = -1;
                 break;
             }
@@ -154,6 +158,7 @@ async function main(){
             id: socket.id,
             x: 400,
             y: 850,
+            health: 100
             // angle: 0,
             // speed: 0
         });

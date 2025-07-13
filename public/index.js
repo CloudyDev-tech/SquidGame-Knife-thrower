@@ -243,6 +243,13 @@ function loop(){
     for(let i=0, len=players.length; i<len; i++){
         const player = players[i];
         canvas.drawImage(playerImage, player.x - cameraX, player.y - cameraY);
+        
+        // Draw health bar with border
+        const healthWidth = 32 * (player.health / 100);
+        canvas.fillStyle = '#000000';
+        canvas.fillRect(player.x - cameraX - 1, player.y - cameraY - 11, 34, 7);
+        canvas.fillStyle = player.health > 50 ? '#00ff00' : player.health > 20 ? '#ffff00' : '#ff0000';
+        canvas.fillRect(player.x - cameraX, player.y - cameraY - 10, healthWidth, 5);
     }
 
     for(let i=0, len=knives.length; i<len; i++){
